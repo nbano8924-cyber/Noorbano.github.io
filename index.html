@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free AI Tools</title>
+<meta name="description" content="AI tools with a free plan, grouped by what you want to do: write, design, edit video, make audio, and research.">
+<style>
+  :root{
+    --bg:#f2f5f1; --ink:#15221b; --muted:#566960; --card:#ffffff;
+    --line:#ccd9d0; --accent:#0f7a5c; --accent-ink:#ffffff; --tag:#e3efe8;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0d1511; --ink:#e6f0ea; --muted:#8fa399; --card:#152019;
+           --line:#263a2f; --accent:#4fd1a1; --accent-ink:#0d1511; --tag:#1d3026; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;padding:0 16px 60px}
+  header,main,footer{max-width:780px;margin:0 auto}
+  header{padding:36px 0 18px}
+  h1{font-size:clamp(2rem,6.5vw,3.2rem);line-height:1.05;margin:0 0 10px;letter-spacing:-1px}
+  header p{margin:0;color:var(--muted);max-width:50ch}
+  .controls{display:grid;gap:12px;margin:8px 0 18px}
+  input[type=search]{width:100%;font:inherit;color:inherit;padding:12px;
+       border:1px solid var(--line);border-radius:8px;background:var(--card)}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tabs button{font:inherit;color:inherit;cursor:pointer;background:transparent;
+       border:1px solid var(--line);border-radius:999px;padding:6px 14px}
+  .tabs button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  .count{color:var(--muted);margin:0 0 10px;font-size:.95rem}
+  .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+  article{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;
+          display:flex;flex-direction:column;gap:8px}
+  article h2{margin:0;font-size:1.15rem}
+  .meta{display:flex;gap:6px;flex-wrap:wrap}
+  .tag{background:var(--tag);border-radius:6px;padding:2px 8px;font-size:.85rem}
+  article p{margin:0;flex:1}
+  article a{align-self:flex-start;color:var(--accent);font-weight:600}
+  .none{color:var(--muted);padding:20px 0}
+  footer{margin-top:40px;color:var(--muted);font-size:.9rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>Free AI Tools</h1>
+  <p>AI tools you can start using without paying. Pick what you want to do and open the tool.</p>
+</header>
+
+<main>
+  <div class="controls">
+    <input type="search" id="q" placeholder="Search, e.g. video or voice" aria-label="Search tools">
+    <div class="tabs" id="tabs"></div>
+  </div>
+  <p class="count" id="count" aria-live="polite"></p>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>
+  <p>Each tool has a free plan with limits, such as daily usage caps or fewer features. Plans change often, so check the official site for current details.</p>
+</footer>
+
+<script>
+  var TOOLS = [
+    {n:"ChatGPT", c:"Write and chat", d:"Ask questions, draft text, and brainstorm ideas.", u:"https://chatgpt.com"},
+    {n:"Claude", c:"Write and chat", d:"Write, summarize long documents, and get help with code.", u:"https://claude.ai"},
+    {n:"Gemini", c:"Write and chat", d:"Google's assistant, connected to Google apps.", u:"https://gemini.google.com"},
+    {n:"Microsoft Copilot", c:"Write and chat", d:"Chat assistant from Microsoft for writing and answers.", u:"https://copilot.microsoft.com"},
+    {n:"Perplexity", c:"Research", d:"Search that gives answers along with the sources it used.", u:"https://www.perplexity.ai"},
+    {n:"Hugging Face", c:"Research", d:"Try thousands of AI models and demos in your browser.", u:"https://huggingface.co"},
+    {n:"Canva", c:"Design", d:"Make thumbnails, posts, and graphics with AI-assisted design tools.", u:"https://www.canva.com"},
+    {n:"Leonardo.ai", c:"Design", d:"Generate images from text prompts with a daily free allowance.", u:"https://leonardo.ai"},
+    {n:"CapCut", c:"Video", d:"Edit short videos with auto captions and effects.", u:"https://www.capcut.com"},
+    {n:"ElevenLabs", c:"Audio", d:"Turn text into natural-sounding voiceovers.", u:"https://elevenlabs.io"},
+    {n:"Suno", c:"Audio", d:"Create songs and background music from a description.", u:"https://suno.com"},
+    {n:"Notion", c:"Productivity", d:"Notes and planning workspace with AI help built in.", u:"https://www.notion.so"}
+  ];
+
+  var cat = "All";
+  var qEl = document.getElementById("q");
+  var tabsEl = document.getElementById("tabs");
+  var gridEl = document.getElementById("grid");
+  var countEl = document.getElementById("count");
+
+  var cats = ["All"];
+  TOOLS.forEach(function (t) { if (cats.indexOf(t.c) < 0) cats.push(t.c); });
+
+  cats.forEach(function (c) {
+    var b = document.createElement("button");
+    b.textContent = c;
+    b.setAttribute("aria-pressed", c === "All" ? "true" : "false");
+    b.onclick = function () {
+      cat = c;
+      Array.prototype.forEach.call(tabsEl.children, function (x) {
+        x.setAttribute("aria-pressed", x === b ? "true" : "false");
+      });
+      render();
+    };
+    tabsEl.appendChild(b);
+  });
+
+  function render() {
+    var q = qEl.value.trim().toLowerCase();
+    gridEl.innerHTML = "";
+    var shown = TOOLS.filter(function (t) {
+      var okCat = cat === "All" || t.c === cat;
+      var okQ = !q || (t.n + " " + t.c + " " + t.d).toLowerCase().indexOf(q) >= 0;
+      return okCat && okQ;
+    });
+    countEl.textContent = shown.length + (shown.length === 1 ? " tool" : " tools");
+    if (!shown.length) {
+      gridEl.innerHTML = '<p class="none">No tools match. Try a different word or category.</p>';
+      return;
+    }
+    shown.forEach(function (t) {
+      var a = document.createElement("article");
+      var h = document.createElement("h2"); h.textContent = t.n;
+      var m = document.createElement("div"); m.className = "meta";
+      var t1 = document.createElement("span"); t1.className = "tag"; t1.textContent = t.c;
+      var t2 = document.createElement("span"); t2.className = "tag"; t2.textContent = "Free plan";
+      m.appendChild(t1); m.appendChild(t2);
+      var p = document.createElement("p"); p.textContent = t.d;
+      var l = document.createElement("a");
+      l.href = t.u; l.target = "_blank"; l.rel = "noopener noreferrer";
+      l.textContent = "Open " + t.n;
+      a.appendChild(h); a.appendChild(m); a.appendChild(p); a.appendChild(l);
+      gridEl.appendChild(a);
+    });
+  }
+
+  qEl.oninput = render;
+  render();
+</script>
+</body>
+</html>

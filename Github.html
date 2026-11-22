@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Best AI Tools for Beginners | AI Tools Guide</title>
+<meta name="description" content="Find the best AI tools for beginners. Simple guides to popular AI writing, image, voice, and design tools, with what each one does and who it’s for.">
+<style>
+  :root {
+    --bg: #f2f5f9;
+    --ink: #101828;
+    --muted: #526071;
+    --line: #d5dce6;
+    --accent: #1f4fe0;
+    --card: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.55;
+  }
+  header, main, footer { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+  header { padding-top: 48px; padding-bottom: 8px; }
+  h1 {
+    font-size: clamp(2.2rem, 8vw, 3.6rem);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin: 0 0 14px;
+  }
+  header p { color: var(--muted); font-size: 1.1rem; max-width: 52ch; margin: 0; }
+  .controls { margin: 28px 0 8px; display: grid; gap: 12px; }
+  input[type="search"] {
+    width: 100%;
+    padding: 13px 14px;
+    font: inherit;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--ink);
+  }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; }
+  .filters button {
+    font: inherit;
+    font-size: 0.95rem;
+    padding: 7px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .filters button[aria-pressed="true"] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+  }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .list { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 12px; }
+  .tool {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--accent);
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+  .tool h2 { font-size: 1.2rem; margin: 0 0 2px; }
+  .tool .kind { color: var(--accent); font-size: 0.9rem; font-weight: 600; margin: 0 0 8px; }
+  .tool p { margin: 0 0 10px; }
+  .tool .for { color: var(--muted); font-size: 0.95rem; }
+  .tool a { color: var(--accent); font-weight: 600; }
+  .empty { color: var(--muted); padding: 24px 0; }
+  footer { color: var(--muted); font-size: 0.9rem; padding-top: 32px; padding-bottom: 48px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>AI Tools Guide</h1>
+  <p>Find an AI tool that fits what you want to do. Each one has a plain-English summary and a link to its official site.</p>
+</header>
+
+<main>
+  <div class="controls">
+    <input type="search" id="search" placeholder="Search tools, like “images” or “writing”" aria-label="Search tools">
+    <div class="filters" id="filters"></div>
+  </div>
+  <ul class="list" id="list"></ul>
+  <p class="empty" id="empty" hidden>No tools match. Try a different word or choose All.</p>
+</main>
+
+<footer>
+  <p>Plans and prices change often, so check each tool’s website for the latest details.</p>
+</footer>
+
+<script>
+  // To add a tool, copy one line below and change the words.
+  var tools = [
+    { name: "ChatGPT", kind: "Chat", what: "Answers questions, writes text, explains ideas, and helps with code.", who: "Anyone who wants a general-purpose AI assistant.", url: "https://chatgpt.com" },
+    { name: "Claude", kind: "Chat", what: "Writes, summarizes, and analyzes long documents, and helps with code.", who: "People working with long text or careful writing.", url: "https://claude.ai" },
+    { name: "Gemini", kind: "Chat", what: "Google’s AI assistant, built to work with Google apps.", who: "People who already use Gmail, Docs, and Google Search.", url: "https://gemini.google.com" },
+    { name: "Perplexity", kind: "Search", what: "Answers questions with links to the sources it used.", who: "People who want research answers they can check.", url: "https://www.perplexity.ai" },
+    { name: "Midjourney", kind: "Images", what: "Turns text descriptions into detailed, artistic images.", who: "Designers, creators, and anyone making visuals.", url: "https://www.midjourney.com" },
+    { name: "ElevenLabs", kind: "Voice", what: "Creates realistic voices from text for videos and audio.", who: "Video makers and podcasters.", url: "https://elevenlabs.io" },
+    { name: "Canva", kind: "Design", what: "Makes posters, social posts, and slides, with AI features built in.", who: "Beginners who want quick, good-looking designs.", url: "https://www.canva.com" }
+  ];
+
+  var activeKind = "All";
+  var listEl = document.getElementById("list");
+  var emptyEl = document.getElementById("empty");
+  var filtersEl = document.getElementById("filters");
+  var searchEl = document.getElementById("search");
+
+  function kinds() {
+    var out = ["All"];
+    tools.forEach(function (t) { if (out.indexOf(t.kind) === -1) out.push(t.kind); });
+    return out;
+  }
+
+  function drawFilters() {
+    filtersEl.innerHTML = "";
+    kinds().forEach(function (k) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = k;
+      b.setAttribute("aria-pressed", k === activeKind ? "true" : "false");
+      b.onclick = function () { activeKind = k; drawFilters(); drawList(); };
+      filtersEl.appendChild(b);
+    });
+  }
+
+  function drawList() {
+    var q = searchEl.value.trim().toLowerCase();
+    listEl.innerHTML = "";
+    var shown = 0;
+    tools.forEach(function (t) {
+      var text = (t.name + " " + t.kind + " " + t.what + " " + t.who).toLowerCase();
+      if ((activeKind === "All" || t.kind === activeKind) && text.indexOf(q) !== -1) {
+        var li = document.createElement("li");
+        li.className = "tool";
+        li.innerHTML =
+          "<h2></h2><p class='kind'></p><p class='what'></p><p class='for'></p>" +
+          "<a target='_blank' rel='noopener'>Visit website</a>";
+        li.querySelector("h2").textContent = t.name;
+        li.querySelector(".kind").textContent = t.kind;
+        li.querySelector(".what").textContent = t.what;
+        li.querySelector(".for").textContent = "Best for: " + t.who;
+        li.querySelector("a").href = t.url;
+        listEl.appendChild(li);
+        shown++;
+      }
+    });
+    emptyEl.hidden = shown !== 0;
+  }
+
+  searchEl.addEventListener("input", drawList);
+  drawFilters();
+  drawList();
+</script>
+</body>
+</html>
